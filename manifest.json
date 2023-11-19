@@ -6,11 +6,11 @@
     "host_permissions": [
         "https://chat.openai.com/*"
       ],
-      "permissions": [
-        "activeTab",
-        "storage",
-        "identity"
-      ],
+    "permissions": [
+      "activeTab",
+      "storage",
+      "identity"
+    ],
     "content_scripts": [
         {
             "matches": ["https://chat.openai.com/*"],
@@ -32,6 +32,13 @@
       "16": "images/driveIcon.png",
       "48": "images/driveIcon.png",
       "128": "images/driveIcon.png"
+    },
+    "oauth2": {
+      "client_id": "707745136498-okua4s1ph6ghgde8lvnbimnc3sh7lepg.apps.googleusercontent.com",
+      "scopes": [
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/drive.readonly"
+      ]
     }
   }
   

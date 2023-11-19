@@ -7,6 +7,7 @@ function addButtonIfElementExists() {
     if (targetButton && !document.getElementById('custom-kyle-button')) {
         var newButton = document.createElement('button');
         newButton.id = 'custom-kyle-button'; // Replace with your desired ID
+        
 
         var icon = document.createElement('img');
         icon.src = chrome.runtime.getURL('images/driveIcon.png'); // Replace with the path to your icon image
@@ -21,6 +22,14 @@ function addButtonIfElementExists() {
         // newButton.style.marginTop = '20px'; // Adds some space above the button
 
         newButton.addEventListener('click', function() {
+            chrome.runtime.sendMessage({ action: "authenticate" }, function(response) {
+                if (response.error) {
+                    console.error(response.error);
+                    // Handle error
+                } else {
+                    createPicker(response.token);
+                }
+            });
             console.log('New button clicked'); // Replace with your desired functionality
         });
 
@@ -52,4 +61,33 @@ function observeDOMChanges() {
 // Start observing or try adding the button immediately if the element might already be there
 if (!addButtonIfElementExists()) {
     observeDOMChanges();
+}
+
+function getAuthToken() {
+    chrome.identity.getAuthToken({ 'interactive': true }, function(token) {
+        if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+        } else {
+            // Use the token.
+            createPicker(token);
+            // You can now use this token to make requests to Google Drive API
+        }
+    });
+}
+
+function createPicker(token) {
+    var picker = new google.picker.PickerBuilder()
+        .addView(google.picker.ViewId.DOCS)
+        .setOAuthToken(token)
+        // ... additional configuration ...
+        .setCallback(pickerCallback)
+        .build();
+    picker.setVisible(true);
+}
+
+function pickerCallback(data) {
+    if (data.action == google.picker.Action.PICKED) {
+        var fileId = data.docs[0].id;
+        // Handle the file ID
+    }
 }
