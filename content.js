@@ -1,4 +1,5 @@
 var observer;
+var pickerApiLoaded = false;
 
 // Function to add your custom button
 function addButtonIfElementExists() {
@@ -22,12 +23,19 @@ function addButtonIfElementExists() {
         // newButton.style.marginTop = '20px'; // Adds some space above the button
 
         newButton.addEventListener('click', function() {
+            //this will trigger background.js to getAuthToken
             chrome.runtime.sendMessage({ action: "authenticate" }, function(response) {
                 if (response.error) {
                     console.error(response.error);
                     // Handle error
                 } else {
-                    createPicker(response.token);
+                    loadGoogleApi();
+                    if(pickerApiLoaded){ //this variable might not be relevant in the current sequence
+                        createPicker(response.token);
+                    }else{
+                        console.log("picker not loaded");
+                    }
+                    
                 }
             });
             console.log('New button clicked'); // Replace with your desired functionality
@@ -75,6 +83,7 @@ function getAuthToken() {
     });
 }
 
+//This function along with the one below creates the popup window for account selection
 function createPicker(token) {
     var picker = new google.picker.PickerBuilder()
         .addView(google.picker.ViewId.DOCS)
@@ -90,4 +99,21 @@ function pickerCallback(data) {
         var fileId = data.docs[0].id;
         // Handle the file ID
     }
+}
+
+
+function loadGoogleApi() {
+    var script = document.createElement('script');
+    script.src = 'https://apis.google.com/js/api.js';
+    script.onload = function() {
+        // Initialize or load your Google API client
+        gapi.load('picker', {'callback': onPickerApiLoad});
+    };
+    document.head.appendChild(script);
+}
+
+function onPickerApiLoad() {
+    // The Google Picker API is loaded and ready to be used.
+    // Set a flag or initialize components that depend on the Picker API here.
+    pickerApiLoaded = true; // Example flag
 }

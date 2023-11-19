@@ -34,7 +34,7 @@
       "128": "images/driveIcon.png"
     },
     "oauth2": {
-      "client_id": "707745136498-okua4s1ph6ghgde8lvnbimnc3sh7lepg.apps.googleusercontent.com",
+      "client_id": "707745136498-n930onligfr5itoi6u98u0cu6vb0goma.apps.googleusercontent.com",
       "scopes": [
         "https://www.googleapis.com/auth/drive.file",
         "https://www.googleapis.com/auth/drive.readonly"

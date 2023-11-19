@@ -1,35 +1,6 @@
 const CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
-// function getAuthToken() {
-//     chrome.identity.getAuthToken({ 'interactive': true }, function(token) {
-//         if (chrome.runtime.lastError) {
-//             console.error(chrome.runtime.lastError);
-//         } else {
-//             // Use the token.
-//             createPicker(token);
-//             // You can now use this token to make requests to Google Drive API
-//         }
-//     });
-// }
-
-// function createPicker(token) {
-//     var picker = new google.picker.PickerBuilder()
-//         .addView(google.picker.ViewId.DOCS)
-//         .setOAuthToken(token)
-//         // ... additional configuration ...
-//         .setCallback(pickerCallback)
-//         .build();
-//     picker.setVisible(true);
-// }
-
-// function pickerCallback(data) {
-//     if (data.action == google.picker.Action.PICKED) {
-//         var fileId = data.docs[0].id;
-//         // Handle the file ID
-//     }
-// }
-
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === "authenticate") {
@@ -42,6 +13,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         });
         return true; // Indicates response will be sent asynchronously
     }
+    if (request.action === "listFiles") {
+        chrome.identity.getAuthToken({ 'interactive': true }, function(token) {
+            if (token) {
+                listDriveFiles(token, sendResponse);
+            } else {
+                sendResponse({ error: "Unable to get token" });
+            }
+        });
+        return true;
+    }
+
 });
 
 // // Listen for a specific message from popup.js or content scripts
@@ -82,3 +64,17 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         });
     }
 });
+
+//Utilizing Google Drive API to get files
+function listDriveFiles(token, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://www.googleapis.com/drive/v3/files');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+    xhr.onload = function() {
+        callback(JSON.parse(xhr.responseText));
+    };
+    xhr.onerror = function() {
+        callback(xhr.statusText);
+    };
+    xhr.send();
+}
