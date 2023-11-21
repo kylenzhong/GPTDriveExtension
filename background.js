@@ -1,5 +1,6 @@
 const CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
 let popupWindowId = null;
 
 
@@ -72,6 +73,17 @@ chrome.windows.onRemoved.addListener(function(windowId) {
     if (windowId === popupWindowId) {
         popupWindowId = null; // Reset the variable when the popup is closed
     }
+    if (request.action === "listFiles") {
+        chrome.identity.getAuthToken({ 'interactive': true }, function(token) {
+            if (token) {
+                listDriveFiles(token, sendResponse);
+            } else {
+                sendResponse({ error: "Unable to get token" });
+            }
+        });
+        return true;
+    }
+
 });
 
 // // Listen for a specific message from popup.js or content scripts
