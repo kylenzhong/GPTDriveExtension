@@ -1,12 +1,13 @@
 var observer;
+var pickerApiLoaded = false;
 
 // Function to add your custom button
 function addButtonIfElementExists() {
     var targetButton = document.querySelector('button.btn.relative.p-0.text-black.dark\\:text-white[aria-label="Attach files"]');
 
     if (targetButton && !document.getElementById('custom-kyle-button')) {
-        var newButton = document.createElement('button');
-        newButton.id = 'custom-kyle-button'; // Replace with your desired ID
+        var openDriveButton = document.createElement('button');
+        openDriveButton.id = 'custom-kyle-button'; // Replace with your desired ID
         
 
         var icon = document.createElement('img');
@@ -14,26 +15,31 @@ function addButtonIfElementExists() {
         icon.alt = 'Google Drive Icon'; // Alt text for the icon
         icon.style.width = '20px'; // Adjust as needed
         icon.style.height = '20px'; // Adjust as needed
-        newButton.appendChild(icon);
+        openDriveButton.appendChild(icon);
 
-        newButton.style.marginLeft = '10px';
-        // newButton.style.width = '100px'; // Adjust the width as needed
-        // newButton.style.height = '30px'; // Adjust the height as needed
-        // newButton.style.marginTop = '20px'; // Adds some space above the button
+        openDriveButton.style.marginLeft = '10px';
+        // openDriveButton.style.width = '100px'; // Adjust the width as needed
+        // openDriveButton.style.height = '30px'; // Adjust the height as needed
+        // openDriveButton.style.marginTop = '20px'; // Adds some space above the button
 
-        newButton.addEventListener('click', function() {
-            chrome.runtime.sendMessage({ action: "authenticate" }, function(response) {
+        openDriveButton.addEventListener('click', function() {
+            chrome.runtime.sendMessage({ action: "checkAuth" }, function(response) {
                 if (response.error) {
-                    console.error(response.error);
-                    // Handle error
+                    // Handle the error or prompt for authentication
+                } else if (response.token) {
+                    // Token exists, list files
+                    chrome.runtime.sendMessage({ action: "createPopup" }, handleFileListResponse);
+    
                 } else {
-                    createPicker(response.token);
+                    // No token, prompt user to authenticate
+                    chrome.runtime.sendMessage({ action: "authenticate" }, handleAuthResponse);
                 }
             });
+
             console.log('New button clicked'); // Replace with your desired functionality
         });
 
-        targetButton.insertAdjacentElement('afterend', newButton);
+        targetButton.insertAdjacentElement('afterend', openDriveButton);
 
         if (observer) {
             observer.disconnect(); // Stop observing once the button is added
@@ -75,6 +81,7 @@ function getAuthToken() {
     });
 }
 
+//This function along with the one below creates the popup window for account selection
 function createPicker(token) {
     var picker = new google.picker.PickerBuilder()
         .addView(google.picker.ViewId.DOCS)
@@ -91,3 +98,27 @@ function pickerCallback(data) {
         // Handle the file ID
     }
 }
+
+
+
+// Handle authentication response from background script
+function handleAuthResponse(response) {
+    if (response.error) {
+        console.error("Authentication error:", response.error);
+        // Display an error message to the user or take other appropriate actions
+    } else if (response.token) {
+        // Authentication successful
+        // Now you can proceed with actions that require authentication
+        chrome.runtime.sendMessage({ action: "listFiles" }, handleFileListResponse);
+    }
+}
+
+//Handls the file list response from background script
+function handleFileListResponse(response) {
+    if (response.error) {
+        console.error('Error listing files:', response.error);
+    } else {
+        displayFileList(response.files);
+    }
+}
+

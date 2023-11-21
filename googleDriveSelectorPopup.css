@@ -1,0 +1,58 @@
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  width: 400px; /* Adjust width as necessary */
+}
+
+#header {
+  background-color: #f1f1f1;
+  text-align: center;
+  padding: 10px;
+  font-size: 1.2em;
+  border-bottom: 1px solid #ccc;
+}
+
+#search-container {
+  display: flex;
+  padding: 10px;
+  justify-content: space-between;
+}
+
+#search-bar {
+  flex-grow: 1;
+  padding: 5px;
+}
+
+#search-button {
+  cursor: pointer;
+}
+
+#googleDriveSelectorPopup-window {
+  border-top: 1px solid #ccc;
+  margin-top: 10px;
+}
+
+.file-item {
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.file-item:hover {
+  background-color: #f9f9f9;
+}
+
+.file-item.selected {
+  background-color: #e0e0ff; /* Light blue background for selected items */
+}
+
+#actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+}
+
+#actions button {
+  margin-left: 5px;
+}
