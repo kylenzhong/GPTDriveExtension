@@ -42,7 +42,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                     });
                 } else {
                     // Focus the new window, to be brought to the foreground
-                    chrome.windows.update(win.id, { focused: true });
+                    chrome.windows.update(popupWindowId, { focused: true });
                 }
             } else {
                 sendResponse({ error: "Unable to get token" });
@@ -59,13 +59,16 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         });
         return true; // Indicates response will be sent asynchronously
     } else if (request.action === "getFileContent") { //file selection in popup
-        getFileContent(request.fileId, function(content) {
-            // You can then send this content to `content.js` or handle it as needed
-            downloadFile(content, 'downloadedfile.txt');
-        });
+        getFileContent(request.fileId, sendResponse);
         return true; // Indicates asynchronous response
     }
 
+});
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+    if (changeInfo.status === 'complete' && tab.url.includes('https://chat.openai.com')) {
+        // Now, this listener is ready to inject scripts or send messages when the tab is fully loaded
+    }
 });
 
 // Listen for when a window is removed (closed)
@@ -73,17 +76,6 @@ chrome.windows.onRemoved.addListener(function(windowId) {
     if (windowId === popupWindowId) {
         popupWindowId = null; // Reset the variable when the popup is closed
     }
-    if (request.action === "listFiles") {
-        chrome.identity.getAuthToken({ 'interactive': true }, function(token) {
-            if (token) {
-                listDriveFiles(token, sendResponse);
-            } else {
-                sendResponse({ error: "Unable to get token" });
-            }
-        });
-        return true;
-    }
-
 });
 
 // // Listen for a specific message from popup.js or content scripts
@@ -104,15 +96,6 @@ function fetchFiles(token) {
     xhr.onerror = () => {
         console.error('Error fetching files');
     };
-    xhr.send();
-}
-
-function fetchFileContent(token, fileId, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
-    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-    xhr.onload = () => callback(xhr.responseText);
-    xhr.onerror = () => console.error('Error fetching file content');
     xhr.send();
 }
 
@@ -137,7 +120,7 @@ function listDriveFiles(token, callback) {
 
 // Function to get a specific file from Google Drive given its ID
 function getFileContent(fileId, callback) {
-    console.log("getFileContent");
+    console.log("inside getFileContent");
     chrome.identity.getAuthToken({ 'interactive': true }, function(token) {
         if (token) {
             fetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media', {
@@ -146,9 +129,18 @@ function getFileContent(fileId, callback) {
                     'Authorization': 'Bearer ' + token
                 })
             })
-            .then(response => response.text()) // Or response.blob() if it's a binary file
-            .then(content => callback(content))
-            .catch(error => console.error('Error fetching file:', error));
+            .then(response => response.blob()) // Or response.blob() if it's a binary file
+            .then(fileBlob => {
+                callback(fileBlob);
+                // Send the content to the content script
+                chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+                    console.log("sending populateTextArea to content.js");
+                    if (tabs[0] && tabs[0].id) {
+                        chrome.tabs.sendMessage(tabs[0].id, {action: "populateTextArea", content: fileBlob});
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching file:', error));            
         } else {
             console.error("Token fetch failed");
         }

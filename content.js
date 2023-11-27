@@ -35,8 +35,6 @@ function addButtonIfElementExists() {
                     chrome.runtime.sendMessage({ action: "authenticate" }, handleAuthResponse);
                 }
             });
-
-            console.log('New button clicked'); // Replace with your desired functionality
         });
 
         targetButton.insertAdjacentElement('afterend', openDriveButton);
@@ -80,6 +78,47 @@ function getAuthToken() {
         }
     });
 }
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.action === "populateTextArea") {
+        // const textArea = document.getElementById('prompt-textarea');
+        // if (textArea) {
+        //     textArea.value = request.content; // Insert the content into the textarea
+        //     // Trigger any necessary events to mimic user input, if needed
+        //     textArea.dispatchEvent(new Event('input', { bubbles: true }));
+        // }
+        // Assuming 'request.fileBlob' contains the blob received from background.js
+        var fileBlob = request.fileBlob; 
+
+        // Create a new FormData object and append the file blob to it
+        var formData = new FormData();
+        formData.append('file', fileBlob);
+
+        // Modify the following URL and method according to your requirements
+        var uploadUrl = 'https://your-upload-url.com/upload';
+
+        // Use fetch or XMLHttpRequest to send the FormData
+        fetch(uploadUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())  // Handle the response from the server
+        .then(data => {
+            console.log('File uploaded successfully:', data);
+            // Additional handling after successful upload
+        })
+        .catch(error => {
+            console.error('Error uploading file:', error);
+        });
+    }
+    console.log("populateTextArea in content.js");
+});
+
+
+
+
+
+
 
 //This function along with the one below creates the popup window for account selection
 function createPicker(token) {

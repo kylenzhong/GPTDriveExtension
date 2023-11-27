@@ -49,6 +49,10 @@ function displayFileList(files) {
     const selectedFileElement = document.querySelector('.file-item.selected');
     if (selectedFileElement) {
         const fileId = selectedFileElement.getAttribute('data-file-id');
-        chrome.runtime.sendMessage({ action: "getFileContent", fileId: fileId });
-    }
+            chrome.runtime.sendMessage({ 
+                action: "getFileContent", 
+                fileId: fileId
+            });
+        };
+    window.close();
 });
